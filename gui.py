@@ -29,10 +29,8 @@ class MainWindow(QMainWindow):
             for i in log:
                 password_current.append(str(i[0]))
             if password == password_current[0]:
-                name = password_current[1]
-                surname = password_current[2]
-
-                self.user = self.facade.loadStudent(id)
+                id_student = password_current[1]
+                self.user = self.facade.loadStudent(id_student)
                 self.ui.hide()
                 self.ui = StudentWidget(self.facade, self)
                 self.ui.show()
@@ -52,18 +50,22 @@ class StudentWidget(QtWidgets.QWidget):
         self.link = link
         super(StudentWidget, self).__init__()
         self.ui = uic.loadUi('forms/studentWidget.ui', self)
-        self.tableWidget.setColumnCount(3)
+        self.tableWidget.setColumnCount(2)
         self.tableWidget.setRowCount(1)
+        self.subjects = self.facade.subjects()
         self.build()
+
+    # def build(self):
+    #     self.tableWidget.setHorizontalHeaderLabels(['Mark', 'Subject'])
+    #     for x, j in enumerate(self.link.user):
+    #         item = QTableWidgetItem()
+    #         item.setText(str(j))
+    #         self.tableWidget.setItem(0, x, item)
 
     def build(self):
         self.tableWidget.setHorizontalHeaderLabels(['Mark', 'Subject'])
-        for x, j in enumerate(self.link.user):
-            item = QTableWidgetItem()
-            item.setText(str(j))
-            self.tableWidget.setItem(0, x, item)
-
-        for x, i in enumerate(marks):
+        counter = 0
+        for x, i in enumerate(self.link.user):
             mark = i[0]
             subject = i[1]
             count = 1
