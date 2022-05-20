@@ -39,17 +39,12 @@
    </property>
    <column>
     <property name="text">
-     <string>Math</string>
+     <string>Mark</string>
     </property>
    </column>
    <column>
     <property name="text">
-     <string>Russian</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Literature</string>
+     <string>Subject</string>
     </property>
    </column>
   </widget>

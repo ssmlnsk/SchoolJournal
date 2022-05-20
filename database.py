@@ -19,7 +19,7 @@ class Database:
         cursor.close()
 
     def fill_db(self):
-        journal = pd.read_excel('excel/journal.xlsx', sheet_name = None)
+        journal = pd.read_excel('excel/journal2.xlsx', sheet_name = None)
         for sheet in journal:
             journal[sheet].to_sql(sheet, self.conn, index=False)
         self.conn.commit()
@@ -36,45 +36,57 @@ class Database:
         cursor = self.conn.cursor()
         password = cursor.execute(f"SELECT password FROM authorization WHERE login = ('{login}')").fetchone()
         user.append(password)
-        name = cursor.execute(f"SELECT name FROM authorization WHERE login = ('{login}')").fetchone()
+        name = cursor.execute(f"SELECT id_student FROM Student WHERE surname = ('{login}')").fetchone()
         user.append(name)
-        surname = cursor.execute(f"SELECT surname FROM authorization WHERE login = ('{login}')").fetchone()
+        name = cursor.execute(f"SELECT name FROM Student WHERE surname = ('{login}')").fetchone()
+        user.append(name)
+        surname = cursor.execute(f"SELECT surname FROM Student WHERE surname = ('{login}')").fetchone()
         user.append(surname)
         self.conn.commit()
         cursor.close()
-        print(user)
         return user
 
-    def loadStudent(self, name, surname):
+    def loadStudent(self, id):
         cursor = self.conn.cursor()
-        cursor.execute(f"SELECT markMath FROM Math WHERE name = ('{name}') AND surname = ('{surname}')")
-        math = cursor.fetchall()
-        cursor.execute(f"SELECT markRussian FROM Russian WHERE name = ('{name}') AND surname = ('{surname}')")
-        russian = cursor.fetchall()
-        cursor.execute(f"SELECT markLiterature FROM Literature WHERE name = ('{name}') AND surname = ('{surname}')")
-        literature = cursor.fetchall()
-        result = [math, russian, literature]
+        cursor.execute(f"SELECT mark, id_subject FROM marks WHERE id_student = ('{id}')")
+        marks = cursor.fetchall()
         self.conn.commit()
         cursor.close()
-        return result
+        return marks
 
-    def loadTeacher(self, name, surname):
+    def subjects(self):
         cursor = self.conn.cursor()
-        cursor.execute(f"SELECT markMath FROM Math WHERE name = ('{name}') AND surname = ('{surname}')")
-        math = cursor.fetchall()
-        cursor.execute(f"SELECT markRussian FROM Russian WHERE name = ('{name}') AND surname = ('{surname}')")
-        russian = cursor.fetchall()
-        cursor.execute(f"SELECT markLiterature FROM Literature WHERE name = ('{name}') AND surname = ('{surname}')")
-        literature = cursor.fetchall()
-        student = [math, russian, literature]
+        cursor.execute(f"SELECT subject_name FROM Subject")
+        subjects = cursor.fetchall()
         self.conn.commit()
         cursor.close()
-        return student
+        return subjects
 
-    def update(self):
-        pass
+    def loadTeacher(self, id):
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT mark, id_subject FROM marks WHERE id_student = ('{id}')")
+        marks = cursor.fetchall()
+        self.conn.commit()
+        cursor.close()
+        return marks
+
+    def students(self):
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT id_student, name, surname FROM Student")
+        students = cursor.fetchall()
+        self.conn.commit()
+        cursor.close()
+        return students
+
+    def update(self, name, surname, marks):
+        cursor = self.conn.cursor()
+        cursor.execute(f"UPDATE Math SET markMath = ('{marks[0]}') WHERE name = ('{name}') AND surname = ('{surname}');")
+        cursor.execute(f"UPDATE Russian SET markRussian = ('{marks[1]}') WHERE name = ('{name}') AND surname = ('{surname}');")
+        cursor.execute(f"UPDATE Literature SET markLiterature = ('{marks[2]}') WHERE name = ('{name}') AND surname = ('{surname}');")
+        self.conn.commit()
+        cursor.close()
 
 
 if __name__ == '__main__':
     db = Database()
-    db.log('Petrov')
+    print(db.subjects())
