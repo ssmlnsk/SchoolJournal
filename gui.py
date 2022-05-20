@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
                 password_current.append(str(i[0]))
             if password == password_current[0]:
                 id_student = password_current[1]
-                self.user = self.facade.loadStudent(id_student)
+                self.user = self.facade.load_student(id_student)
                 self.ui.hide()
                 self.ui = StudentWidget(self.facade, self)
                 self.ui.show()
@@ -100,23 +100,23 @@ class TeacherWidget(QtWidgets.QWidget):
         self.tableWidget.clear()
         self.tableWidget.setHorizontalHeaderLabels(['Mark', 'Subject'])
         student = self.students[index]
-        id_student = student[0]
-        name = student[1]
-        surname = student[2]
-        self.student_name.setText(f"{name} {surname}")
-        marks = self.facade.loadTeacher(id_student)
+        self.id_student = student[0]
+        self.name = student[1]
+        self.surname = student[2]
+        self.student_name.setText(f"{self.name} {self.surname}")
+        marks = self.facade.load_teacher(self.id_student)
         counter = 0
         for x, i in enumerate(marks):
-            mark = i[0]
-            subject = i[1]
+            self.mark = i[0]
+            self.subject = i[1]
             count = 1
             item = QTableWidgetItem()
-            item.setText(str(mark))
+            item.setText(str(self.mark))
             self.tableWidget.setRowCount(counter + 1)
             self.tableWidget.setItem(counter, 0, item)
             logging.log(logging.INFO, 'Добавлена оценка')
             for s in self.subjects:
-                if count == subject:
+                if count == self.subject:
                     item2 = QTableWidgetItem()
                     item2.setText(str(s))
                     self.tableWidget.setRowCount(counter + 1)
@@ -131,7 +131,7 @@ class TeacherWidget(QtWidgets.QWidget):
     def button_next(self):
         if self.index < len(self.students) - 1:
             self.index += 1
-            self.UpdateTable(self.index)
+            self.build(self.index)
             logging.log(logging.INFO, 'Следующий учащийся')
         else:
             print('Ты чего?')
@@ -139,18 +139,25 @@ class TeacherWidget(QtWidgets.QWidget):
     def button_prev(self):
         if self.index > 0:
             self.index -= 1
-            self.UpdateTable(self.index)
+            self.build(self.index)
             logging.log(logging.INFO, 'Предыдущий учащийся')
         else:
             print('Ты че, дурачок?')
 
     def save(self):
-        name_s = self.name
-        surname_s = self.surname
-        marks = [self.tableWidget.item(0, 0).text(), self.tableWidget.item(0, 1).text(),
-                 self.tableWidget.item(0, 2).text()]
-        print([name_s, surname_s, marks])
-        self.facade.save(name_s, surname_s, marks)
+        rows = self.tableWidget.rowCount()
+        cols = self.tableWidget.columnCount()
+        marks = []
+        for row in range(rows):
+            tmp = []
+            for col in range(cols):
+                try:
+                    tmp.append(self.tableWidget.item(row, col).text())
+                except:
+                    tmp.append('No data')
+            marks.append(tmp)
+        print(marks)
+        self.facade.save(self.id_student, marks)
         logging.log(logging.INFO, 'Данные сохранены')
 
 

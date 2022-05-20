@@ -52,5 +52,5 @@ class Facade:
             student.clear()
         return students
 
-    def save(self, name, surname, marks):
-        self.db.update(name, surname, marks)
+    def save(self, id, marks):
+        self.db.update(id, marks)

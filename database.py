@@ -70,15 +70,11 @@ class Database:
         cursor.close()
         return students
 
-    def update(self, name, surname, marks):
+    def update(self, id, marks):
         cursor = self.conn.cursor()
-        cursor.execute(f"UPDATE Math SET markMath = ('{marks[0]}') WHERE name = ('{name}') AND surname = ('{surname}');")
-        cursor.execute(f"UPDATE Russian SET markRussian = ('{marks[1]}') WHERE name = ('{name}') AND surname = ('{surname}');")
-        cursor.execute(f"UPDATE Literature SET markLiterature = ('{marks[2]}') WHERE name = ('{name}') AND surname = ('{surname}');")
+        marks_load = marks
+        for i in marks_load:
+            cursor.execute(f"UPDATE marks SET mark = ('{i[0]}') WHERE id_student = ('{id}')")
+            # cursor.execute(f"UPDATE Subject SET id_subject = ('{i[1]}') WHERE id_student = ('{id}')")
         self.conn.commit()
         cursor.close()
-
-
-if __name__ == '__main__':
-    db = Database()
-    print(db.subjects())
