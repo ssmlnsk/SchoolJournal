@@ -6,7 +6,7 @@ class Split:
         self.db = Database()
 
     def split(self, id):
-        loaded = self.db.loadStudent(id)
+        loaded = self.db.load_student(id)
         result = []
         res = []
         for i in loaded:

@@ -46,7 +46,7 @@ class Database:
         cursor.close()
         return user
 
-    def loadStudent(self, id):
+    def load_student(self, id):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT mark, id_subject FROM marks WHERE id_student = ('{id}')")
         marks = cursor.fetchall()
@@ -61,14 +61,6 @@ class Database:
         self.conn.commit()
         cursor.close()
         return subjects
-
-    def loadTeacher(self, id):
-        cursor = self.conn.cursor()
-        cursor.execute(f"SELECT mark, id_subject FROM marks WHERE id_student = ('{id}')")
-        marks = cursor.fetchall()
-        self.conn.commit()
-        cursor.close()
-        return marks
 
     def students(self):
         cursor = self.conn.cursor()

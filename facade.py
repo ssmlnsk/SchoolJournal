@@ -15,12 +15,12 @@ class Facade:
         self.db.update()
         logging.log(logging.INFO, 'facade: update')
 
-    def loadStudent(self, id):
+    def load_student(self, id):
         data = self.s.split(id)
         logging.log(logging.INFO, 'facade: load')
         return data
 
-    def loadTeacher(self, id):
+    def load_teacher(self, id):
         data = self.s.split(id)
         logging.log(logging.INFO, 'facade: load')
         return data
@@ -54,8 +54,3 @@ class Facade:
 
     def save(self, name, surname, marks):
         self.db.update(name, surname, marks)
-
-if __name__ == '__main__':
-    facade = Facade()
-    print(facade.subjects())
-        
