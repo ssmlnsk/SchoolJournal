@@ -1,8 +1,8 @@
 import sys
 import logging
 
-from PyQt5 import uic, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem
+from PyQt5 import uic, QtWidgets, QtGui
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QMessageBox
 from facade import Facade
 
 logging.basicConfig(level=logging.INFO)
@@ -10,6 +10,10 @@ logging.basicConfig(level=logging.INFO)
 
 class MainWindow(QMainWindow):
     def __init__(self, facade):
+        """
+        Инициализация формы авторизации
+        :param facade: facade
+        """
         super(MainWindow, self).__init__()
         self.ui = uic.loadUi('forms/authorization.ui', self)
         self.facade = facade
@@ -18,33 +22,83 @@ class MainWindow(QMainWindow):
         logging.log(logging.INFO, 'Приложение запущено')
 
     def login(self):
+        """
+        Авторизация пользователя
+        :return:
+        """
         self.user = []
         users = self.facade.auth()
         login = self.loginText.text()
         password = self.passwordText.text()
-        if login != users[0]:
-            log = self.facade.log(login)
-            password_current = []
-            for i in log:
-                password_current.append(str(i[0]))
-            if password == password_current[0]:
-                id_student = password_current[1]
-                self.user = self.facade.load_student(id_student)
-                self.ui.hide()
-                self.ui = StudentWidget(self.facade, self)
-                self.ui.show()
-                logging.log(logging.INFO, 'Открыто окно "Ученик"')
+        if bool(login in users) == False:
+            self.warning_login()
         else:
-            password_current = self.facade.log(login)
-            if password != password_current:
-                self.ui.hide()
-                self.ui = TeacherWidget(self.facade, self)
-                self.ui.show()
-                logging.log(logging.INFO, 'Открыто окно "Учитель"')
+            if login != users[0]:
+                log = self.facade.log(login)
+                password_current = []
+                for i in log:
+                    password_current.append(str(i[0]))
+                if password == password_current[0]:
+                    id_student = password_current[1]
+                    self.user = self.facade.load_student(id_student)
+                    self.ui.hide()
+                    self.ui = StudentWidget(self.facade, self)
+                    self.ui.show()
+                    logging.log(logging.INFO, 'Открыто окно "Ученик"')
+                else:
+                    self.warning_password()
+            else:
+                log = self.facade.log(login)
+                password_current = log[0]
+                if password == password_current[0]:
+                    self.ui.hide()
+                    self.ui = TeacherWidget(self.facade, self)
+                    self.ui.show()
+                    logging.log(logging.INFO, 'Открыто окно "Учитель"')
+                else:
+                    self.warning_password()
+
+    def warning_login(self):
+        """
+        Создание MessageBox, если данные содержат буквы и символы.
+        :return: None
+        """
+        messagebox = QMessageBox(self)
+        messagebox.setWindowTitle("Ошибка ввода")
+        messagebox.setText("Неверный логин!")
+        messagebox.setIcon(QMessageBox.Warning)
+        messagebox.setStandardButtons(QMessageBox.Ok)
+
+        messagebox.show()
+        logging.log(logging.INFO, 'Открыто диалоговое окно "Ошибка ввода"')
+
+    def warning_password(self):
+        """
+        Создание MessageBox, если данные содержат буквы и символы.
+        :return: None
+        """
+        messagebox = QMessageBox(self)
+        messagebox.setWindowTitle("Ошибка ввода")
+        messagebox.setText("Неверный пароль!")
+        messagebox.setIcon(QMessageBox.Warning)
+        messagebox.setStandardButtons(QMessageBox.Ok)
+
+        messagebox.show()
+        logging.log(logging.INFO, 'Открыто диалоговое окно "Ошибка ввода"')
 
 
 class StudentWidget(QtWidgets.QWidget):
+    """
+    Режим работы приложения для студента
+    :param:
+    """
+
     def __init__(self, facade, link=None):
+        """
+        Инициализация
+        :param facade: facade
+        :param link: link
+        """
         self.facade = facade
         self.link = link
         super(StudentWidget, self).__init__()
@@ -55,6 +109,10 @@ class StudentWidget(QtWidgets.QWidget):
         self.build()
 
     def build(self):
+        """
+        Заполнение таблицы строками, столбцами с добавлением в них элементов.
+        :return:
+        """
         self.tableWidget.setHorizontalHeaderLabels(['Mark', 'Subject'])
         counter = 0
         for x, i in enumerate(self.link.user):
@@ -65,6 +123,14 @@ class StudentWidget(QtWidgets.QWidget):
             item.setText(str(mark))
             self.tableWidget.setRowCount(counter + 1)
             self.tableWidget.setItem(counter, 0, item)
+            if mark == 5:
+                item.setBackground(QtGui.QColor(188, 245, 188))
+            if mark == 4:
+                item.setBackground(QtGui.QColor(255, 255, 173))
+            if mark == 3:
+                item.setBackground(QtGui.QColor(255, 221, 199))
+            if mark == 2:
+                item.setBackground(QtGui.QColor(255, 167, 153))
             logging.log(logging.INFO, 'Добавлена оценка')
             for s in self.subjects:
                 if count == subject:
@@ -81,7 +147,17 @@ class StudentWidget(QtWidgets.QWidget):
 
 
 class TeacherWidget(QtWidgets.QWidget):
+
+    """
+    Режим работы приложения для преподавателя
+    """
+
     def __init__(self, facade, link=None):
+        """
+        Инициализация формы
+        :param facade: facade
+        :param link: link
+        """
         self.facade = facade
         self.link = link
         self.index = 0
@@ -89,6 +165,7 @@ class TeacherWidget(QtWidgets.QWidget):
         self.ui = uic.loadUi('forms/teacherWidget.ui', self)
         self.btnNext.clicked.connect(lambda: self.button_next())
         self.btnPrev.clicked.connect(lambda: self.button_prev())
+        self.btnAdd.clicked.connect(lambda: self.insert_row())
         self.btnSave.clicked.connect(self.save)
         self.tableWidget.setColumnCount(2)
 
@@ -97,6 +174,10 @@ class TeacherWidget(QtWidgets.QWidget):
         self.build(0)
 
     def build(self, index):
+        """
+        Заполнение таблицы строками, столбцами с добавлением в них элементов.
+        :return:
+        """
         self.tableWidget.clear()
         self.tableWidget.setHorizontalHeaderLabels(['Mark', 'Subject'])
         student = self.students[index]
@@ -129,6 +210,10 @@ class TeacherWidget(QtWidgets.QWidget):
                     count += 1
 
     def button_next(self):
+        """
+        Переход на таблицу с оценками следующего студента
+        :return:
+        """
         if self.index < len(self.students) - 1:
             self.index += 1
             self.build(self.index)
@@ -137,6 +222,10 @@ class TeacherWidget(QtWidgets.QWidget):
             print('Ты чего?')
 
     def button_prev(self):
+        """
+        Переход на таблицу с оценками предыдущего студента
+        :return:
+        """
         if self.index > 0:
             self.index -= 1
             self.build(self.index)
@@ -145,6 +234,12 @@ class TeacherWidget(QtWidgets.QWidget):
             print('Ты че, дурачок?')
 
     def save(self):
+        """
+        Сохранение оценок
+        :return:
+        """
+        old_marks = self.facade.load_student(self.id_student)
+        print(old_marks)
         rows = self.tableWidget.rowCount()
         cols = self.tableWidget.columnCount()
         marks = []
@@ -156,9 +251,72 @@ class TeacherWidget(QtWidgets.QWidget):
                 except:
                     tmp.append('No data')
             marks.append(tmp)
-        print(marks)
-        self.facade.save(self.id_student, marks)
+
+        save_marks = []
+        for i in marks:
+            default = ['2', '3', '4', '5']
+            save_mark = []
+            mark = i[0]
+            if bool(mark in default) == False:
+                self.warning_no_default()
+                break
+            else:
+                subject = i[1]
+                counter = 1
+                save_mark.append(int(mark))
+                if bool(subject in self.subjects) == False:
+                    self.warning_no_subject()
+                else:
+                    for s in self.subjects:
+                        if subject == s:
+                            subject = counter
+                            save_mark.append(subject)
+                            counter += 1
+                            break
+                        else:
+                            counter += 1
+                    save_marks.append(save_mark.copy())
+
+        self.facade.save(self.id_student, save_marks, old_marks)
         logging.log(logging.INFO, 'Данные сохранены')
+
+    def insert_row(self):
+        """
+        Добавление новой строки для предмета и оценки по нему
+        :return:
+        """
+        rowPosition = self.tableWidget.rowCount()
+        self.tableWidget.insertRow(rowPosition)
+        logging.log(logging.INFO, 'Добавлена строка')
+
+    def warning_no_default(self):
+        """
+        Предупреждение об ошибке ввода — введенное число не входит в диапазон оценок (2, 3, 4, 5)
+        :return:
+        """
+        messagebox = QMessageBox(self)
+        messagebox.setWindowTitle("Ошибка ввода")
+        messagebox.setText("Оценка не равна оценкам:")
+        messagebox.setInformativeText("2, 3, 4 ,5")
+        messagebox.setIcon(QMessageBox.Warning)
+        messagebox.setStandardButtons(QMessageBox.Ok)
+
+        messagebox.show()
+        logging.log(logging.INFO, 'Открыто диалоговое окно "Ошибка ввода"')
+
+    def warning_no_subject(self):
+        """
+        Предупреждение об ошибке — введенный предмет отстутствует в базе данных
+        :return:
+        """
+        messagebox = QMessageBox(self)
+        messagebox.setWindowTitle("Ошибка ввода")
+        messagebox.setText("Данный предмет не имеется в базе")
+        messagebox.setIcon(QMessageBox.Warning)
+        messagebox.setStandardButtons(QMessageBox.Ok)
+
+        messagebox.show()
+        logging.log(logging.INFO, 'Открыто диалоговое окно "Ошибка ввода"')
 
 
 class Builder:
